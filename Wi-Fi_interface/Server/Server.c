@@ -6,6 +6,7 @@
 #include <sys/socket.h> 
 #include <sys/types.h> 
 #include <unistd.h> // read(), write(), close()
+#include <arpa/inet.h> // inet_addr()
 #define MAX 80 
 #define PORT 8080 
 #define SA struct sockaddr 
@@ -15,7 +16,7 @@ int main()
 { 
 	int sockfd, connfd, len; 
 	struct sockaddr_in servaddr, cli; 
-char buffer[BUFFER_SIZE];
+        char buffer[BUFFER_SIZE];
 	// socket create and verification 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
 	if (sockfd == -1) { 
@@ -28,11 +29,12 @@ char buffer[BUFFER_SIZE];
 
 	// assign IP, PORT 
 	servaddr.sin_family = AF_INET; 
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	servaddr.sin_port = htons(PORT); 
+	//servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	servaddr.sin_port = htons(3388); 
 
 	// Binding newly created socket to given IP and verification 
-	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
+	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) == -1) { 
 		printf("socket bind failed...\n"); 
 		exit(0); 
 	} 
