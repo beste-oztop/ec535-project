@@ -98,6 +98,9 @@
     "tuple": "cpp",
     "typeinfo": "cpp",
     "variant": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "unistd.h": "c",
+    "socket.h": "c",
+    "stdio.h": "c"
   }
 }

@@ -9,13 +9,21 @@ SINA KARIMI
 ***********
 */
 
-
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <arpa/inet.h> // inet_addr()
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h> // bzero()
+#include <sys/socket.h>
+#include <unistd.h> // read(), write(), close()
+
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
@@ -40,6 +48,8 @@ struct CharacterData {
 
 
 #define MAX_CHARS 100 // We have no more than 100 chars
+#define PORT 8080
+#define SA struct sockaddr
 
 /*
 Function to open the file, read its contents into a struct, and return the struct
@@ -55,10 +65,26 @@ vector<CharacterData> readCharactersFromFile(const std::string& filename) {
     }
 
     CharacterData character;
-    while (file >> character.character >> character.position.x >> character.position.y) {
+    string charStr;
+    while (file >> charStr >> character.position.x >> character.position.y) {
+
+        // Handling special characters
+        if (charStr == "space") {
+            character.character = ' ';
+        } else if (charStr == "tab") {
+            character.character = '\t';
+        } else if (charStr == "enter") {
+            character.character = '\n';
+        } else if (charStr.size() == 1) {
+            character.character = charStr[0];
+        } else {
+            cerr << "Invalid character: " << charStr << endl;
+            continue;
+        }
+
         characters.push_back(character);
         if (characters.size() >= MAX_CHARS) {
-            std::cerr << "Error: Reached maximum number of characters (" << MAX_CHARS << ")" << std::endl;
+            cerr << "Error: Reached maximum number of characters (" << MAX_CHARS << ")" << endl;
             break;
         }
     }
@@ -74,7 +100,7 @@ A helper function to determine the characters read from the coordinates
 */
 char getCharacterFromCoordinates(Coordinate input, vector<CharacterData> characters, int numCharacters) {
     double minDistance = INFINITY;
-    char closestCharacter = ' ';
+    char closestCharacter;
 
     for (int i = 0; i < numCharacters; i++) {
         // Calculate the distance between the input coordinates and each character's position
@@ -143,6 +169,44 @@ Coordinate findRedObjectCoordinates(const std::string& filename) {
 }
 
 
+/*
+Function to open the socket and connect to the server
+*/
+
+int openSocketAndConnect() {
+    int sockfd;
+    struct sockaddr_in servaddr;
+
+    // socket create and verification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        cerr << "socket creation failed..." << endl;
+        return -1;
+    }
+    else {
+        cout << "Socket successfully created.." << endl;
+    }
+
+    bzero(&servaddr, sizeof(servaddr));
+
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr("10.239.121.109");
+    servaddr.sin_port = htons(PORT);
+
+    // connect the client socket to server socket
+    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
+        cerr << "connection with the server failed..." << endl;
+        close(sockfd);
+        return -1;
+    }
+    else {
+        cout << "connected to the server.." << endl;
+    }
+
+    return sockfd;
+}
+
 int main( int argc, char** argv )
  {   
     // Read characters from file
@@ -157,17 +221,41 @@ int main( int argc, char** argv )
     }
     */
 
+    // Open socket and connect
+    int sockfd = openSocketAndConnect();
+    if (sockfd == -1) {
+        cerr << "Failed to open socket and connect." << endl;
+        return 1;
+    }
+
+
     while (true) {
         // Get the coordinate from frame every 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
         Coordinate input = findRedObjectCoordinates("frame.png");
+        int x_pos = input.x;
+        int y_pos = input.y;
 
         // Get the closest character to the input coordinates
         char result = getCharacterFromCoordinates(input, characters, numCharacters);
 
         cout << "The closest character is: " << result << endl;
-        printf("x coord: %d, y coord: %d ",input.x, input.y);
+        printf("x coord: %d, y coord: %d ",x_pos, y_pos);
+
+        char message[100];
+        sprintf(message, "%c", result);
+
+        // Send the message to server
+        if (send(sockfd, message, strlen(message), 0) < 0) {
+            perror("Send failed");
+            close(sockfd);
+            return 1;
+        }
+
     }
+
+    // close the socket
+    close(sockfd);
 
    return 0;
 }
