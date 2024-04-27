@@ -1,0 +1,7 @@
+git clone -b v5.10.168-ti-r72 https://github.com/beagleboard/linux.git
+make ARCH=arm distclean
+make ARCH=arm bb.org_defconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- uImage dtbs LOADADDR=0x80008000 -j16
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-  modules  -j16
+sudo make ARCH=arm  modules_install
