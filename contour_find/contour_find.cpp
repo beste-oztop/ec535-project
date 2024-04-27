@@ -5,7 +5,7 @@
 
 int main(int argc, const char * argv[]) {
 
-    cv::Mat image= cv::imread("contour.jpg");
+    cv::Mat image= cv::imread("frame.png");
     if (!image.data) {
         std::cout << "Image file not found\n";
         return 1;
