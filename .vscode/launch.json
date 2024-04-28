@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": ".",
-      "program": "build/Debug/outDebug",
+      "cwd": "e:/PhD/Embedded_Systems/Project/ec535-project/Touchme",
+      "program": "e:/PhD/Embedded_Systems/Project/ec535-project/Touchme/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
