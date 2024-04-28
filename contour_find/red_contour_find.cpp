@@ -7,7 +7,7 @@ using namespace std;
 
 int main( int argc, char** argv )
  {
-    cv::Mat image= cv::imread("contour_red_test.jpeg");
+    cv::Mat image= cv::imread(argv[1]);
     if (!image.data) {
         std::cout << "Image file not found\n";
         return 1;

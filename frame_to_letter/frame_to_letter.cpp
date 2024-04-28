@@ -75,6 +75,12 @@ vector<CharacterData> readCharactersFromFile(const std::string& filename) {
             character.character = '\t';
         } else if (charStr == "enter") {
             character.character = '\n';
+        } else if (charStr == "dot") {
+            character.character = '.';
+        } else if (charStr == "comma") {
+            character.character = ',';
+        } else if (charStr == "mark") {
+            character.character = '"';
         } else if (charStr.size() == 1) {
             character.character = charStr[0];
         } else {
@@ -210,7 +216,7 @@ int openSocketAndConnect() {
 int main( int argc, char** argv )
  {   
     // Read characters from file
-    std::vector<CharacterData> characters = readCharactersFromFile("simple_coordinates.txt");
+    std::vector<CharacterData> characters = readCharactersFromFile("all_coordinates.txt");
     int numCharacters = characters.size();
 
     /*
