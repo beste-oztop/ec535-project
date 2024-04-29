@@ -1,13 +1,21 @@
 import socket
+import time
+from pynput.keyboard import Controller # Pressing the key taken from the client side
+
 
 # Set up server socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(('10.239.121.109', 8080))  # Use your PC's IP and choose a port
+server_socket.bind(('10.239.204.45', 8080))  # Use your PC's IP and choose a port
 server_socket.listen(1)
-f = open("received_data.txt", "a")
+
+keyboard = Controller()  # Create the controller
 
 
 print("Waiting for connection...")
+
+
+        
+
 
 # Receive data from BeagleBone
 while True:
@@ -22,8 +30,8 @@ while True:
             if not data:
                 print("Connection closed by client.")
                 break
-            print(f"Received data: {data.decode()}")
-            f.write(data.decode())
+            print(f"{data.decode()}")
+            keyboard.type(f"{data.decode()}")  # Type the character
 
     finally:
         # Close client socket
@@ -31,3 +39,11 @@ while True:
 
 # Close server socket (this will never be reached in this implementation)
 server_socket.close()
+
+
+
+
+
+
+
+

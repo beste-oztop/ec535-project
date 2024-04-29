@@ -124,12 +124,11 @@ char getCharacterFromCoordinates(Coordinate input, vector<CharacterData> charact
 
 
 
-Coordinate findRedObjectCoordinates(const std::string& filename) {
-    cv::Mat image = cv::imread(filename);
-
+Coordinate findRedObjectCoordinates(const cv::Mat image) {
+ 
     // The following hue, saturation and value are for "red" color.
-    int hue_low = 170;
-    int hue_high = 179;
+    int hue_low = 75;
+    int hue_high = 130;
 
     int sat_low = 150; 
     int sat_high = 255;
@@ -197,7 +196,7 @@ int openSocketAndConnect() {
 
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("10.239.121.109");
+    servaddr.sin_addr.s_addr = inet_addr("10.239.204.45");
     servaddr.sin_port = htons(PORT);
 
     // connect the client socket to server socket
@@ -215,6 +214,27 @@ int openSocketAndConnect() {
 
 int main( int argc, char** argv )
  {   
+    // Open the top camera and set for capturing a frame
+    VideoCapture captureTop(2);
+	    if (!captureTop.isOpened()) {
+	        return -1;
+	    }
+
+    captureTop.set(CAP_PROP_FRAME_WIDTH, 640);
+    captureTop.set(CAP_PROP_FRAME_HEIGHT, 480);
+    captureTop.set(CAP_PROP_FOURCC, VideoWriter::fourcc('M', 'J', 'P', 'G'));
+
+    // Open the bottom camera and set for capturing a frame
+    VideoCapture captureBottom(0);
+    if (!captureBottom.isOpened()) {
+        return -1;
+    }
+
+    captureBottom.set(CAP_PROP_FRAME_WIDTH, 640);
+    captureBottom.set(CAP_PROP_FRAME_HEIGHT, 480);
+    captureBottom.set(CAP_PROP_FOURCC, VideoWriter::fourcc('M', 'J', 'P', 'G'));
+
+
     // Read characters from file
     std::vector<CharacterData> characters = readCharactersFromFile("all_coordinates.txt");
     int numCharacters = characters.size();
@@ -234,33 +254,70 @@ int main( int argc, char** argv )
         return 1;
     }
 
+    Mat frameTop;
+    Mat frameBottom;
+
+    int y_touch_bottom = 250;
+    int y_touch_top = 325;
+
+    bool running = true;
+    char message[100];
 
     while (true) {
-        // Get the coordinate from frame every 1 second
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        Coordinate input = findRedObjectCoordinates("frame.png");
-        int x_pos = input.x;
-        int y_pos = input.y;
+        // Check the bottom frame coordinates
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        captureBottom >> frameBottom;	
+        Coordinate inputBottom = findRedObjectCoordinates(frameBottom);
+        printf("y bottom: %d \n", inputBottom.y);
+
+        // Check the top frame coordinates	
+        captureTop >> frameTop;
+        Coordinate inputTop = findRedObjectCoordinates(frameTop);
+
+        int x_pos = inputTop.x;
+        int y_pos = inputTop.y;
 
         // Get the closest character to the input coordinates
-        char result = getCharacterFromCoordinates(input, characters, numCharacters);
-
-        cout << "The closest character is: " << result << endl;
-        printf("x coord: %d, y coord: %d ",x_pos, y_pos);
-
-        char message[100];
+        char result = getCharacterFromCoordinates(inputTop, characters, numCharacters);
         sprintf(message, "%c", result);
 
-        // Send the message to server
-        if (send(sockfd, message, strlen(message), 0) < 0) {
-            perror("Send failed");
-            close(sockfd);
-            return 1;
-        }
+        // Checkpoint
+        //cout << "The closest character is: " << result << endl;
+        printf("\n x coord: %d, y coord: %d \n",x_pos, y_pos);
 
-    }
+        
+        if ((y_touch_bottom < inputBottom.y) && (inputBottom.y< y_touch_top)){
+            running = false;
 
-    // close the socket
+            // Exit the loop if only finger is taken out
+            while(!running){
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                captureBottom >> frameBottom;	
+                Coordinate inputBottom = findRedObjectCoordinates(frameBottom);
+                printf("y bottom: %d \n", inputBottom.y);
+
+                if((y_touch_bottom < inputBottom.y) && (inputBottom.y< y_touch_top)){
+                    running = false;
+                    printf("Not going anywhere!!\n");
+                }
+
+                else{
+                    running = true;
+                    // Send the message to server if the finger is touched for sure"
+                    if (send(sockfd, message, strlen(message), 0) < 0) {
+                        perror("Send failed");
+                        close(sockfd);
+                        return 1;
+                    }
+                }
+
+            }
+
+            }
+
+    } 
+
+    // close the socket after escaping the while loop
     close(sockfd);
 
    return 0;
