@@ -17,8 +17,8 @@
 - [x] Implement color thresholding for finger detection
 - [x] Implement touch detection with the second camera
 - [x] Setting up a kernel to handle finger press detection
-- [ ] Pipeline finger detection and finger implementation
-- [ ] Combine different parts together
-- [ ] Setting up the cameras and other devices to test our design
-- [ ] Preparing a final video demonstration
-- [ ] Preparing a final report
+- [x] Pipeline finger detection and finger implementation
+- [x] Combine different parts together
+- [x] Setting up the cameras and other devices to test our design
+- [x] Preparing a final video demonstration
+- [x] Preparing a final report
