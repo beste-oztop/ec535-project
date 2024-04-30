@@ -2,6 +2,7 @@
 ![Members](https://github.com/beste-oztop/ec535-project/blob/main/private/cover.png)
 ### Introduction
 In this project, we will implement a sample version of laser keyboards. For this project, we use a Wi-Fi interface to send data between BeagleBone and our device, two cameras to detect the key, and whether the key is pressed or the user hovers over the keyboard. We clarify everything in detail in our report.
+In addition, you could find the video demonstration in the VideoDemo directory in the repo or use [Youtube Link](https://www.youtube.com/watch?v=6opqM818R8w)
 
 ### TO-DO list
 
